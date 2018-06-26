@@ -10,7 +10,7 @@ Input:
   The input must have a time in the form of:
   Number:Number NameOfTheSong \n
   
-  It will take each line as a single song's data.
+In this example, the "Number:Number" is the time.  The program is dependent on the colon/colons to designate the beginning time of the song.  It will take each line as a single song's data.
   
 
 Dependencies:
