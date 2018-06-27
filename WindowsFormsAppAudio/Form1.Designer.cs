@@ -39,6 +39,8 @@
             this.listBox1 = new System.Windows.Forms.ListBox();
             this.listBox2 = new System.Windows.Forms.ListBox();
             this.ComputeButton = new System.Windows.Forms.Button();
+            this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            this.label2 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // AudioLabel
@@ -93,9 +95,10 @@
             // 
             // BrowseJPGButton
             // 
-            this.BrowseJPGButton.Location = new System.Drawing.Point(764, 72);
+            this.BrowseJPGButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.BrowseJPGButton.Location = new System.Drawing.Point(764, 121);
             this.BrowseJPGButton.Name = "BrowseJPGButton";
-            this.BrowseJPGButton.Size = new System.Drawing.Size(140, 115);
+            this.BrowseJPGButton.Size = new System.Drawing.Size(409, 132);
             this.BrowseJPGButton.TabIndex = 5;
             this.BrowseJPGButton.Text = "Compute Timestamps";
             this.BrowseJPGButton.UseVisualStyleBackColor = true;
@@ -124,7 +127,7 @@
             // ComputeButton
             // 
             this.ComputeButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ComputeButton.Location = new System.Drawing.Point(408, 583);
+            this.ComputeButton.Location = new System.Drawing.Point(764, 384);
             this.ComputeButton.Name = "ComputeButton";
             this.ComputeButton.Size = new System.Drawing.Size(419, 108);
             this.ComputeButton.TabIndex = 8;
@@ -132,11 +135,30 @@
             this.ComputeButton.UseVisualStyleBackColor = true;
             this.ComputeButton.Click += new System.EventHandler(this.ComputeButton_Click);
             // 
+            // progressBar1
+            // 
+            this.progressBar1.Location = new System.Drawing.Point(298, 618);
+            this.progressBar1.Name = "progressBar1";
+            this.progressBar1.Size = new System.Drawing.Size(732, 57);
+            this.progressBar1.TabIndex = 9;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label2.Location = new System.Drawing.Point(635, 694);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(67, 18);
+            this.label2.TabIndex = 10;
+            this.label2.Text = "progress";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1223, 752);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.ComputeButton);
             this.Controls.Add(this.listBox2);
             this.Controls.Add(this.listBox1);
@@ -148,6 +170,7 @@
             this.Controls.Add(this.AudioLabel);
             this.Name = "Form1";
             this.Text = "Form1";
+            this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -166,6 +189,8 @@
         private System.Windows.Forms.ListBox listBox1;
         private System.Windows.Forms.ListBox listBox2;
         private System.Windows.Forms.Button ComputeButton;
+        private System.Windows.Forms.ProgressBar progressBar1;
+        private System.Windows.Forms.Label label2;
     }
 }
 

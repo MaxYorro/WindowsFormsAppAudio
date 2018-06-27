@@ -15,11 +15,15 @@ namespace WindowsFormsAppAudio
         string musicFileLocation = "";
         string fileFolder = "";
         string[] stringSeparators = new string[] { ".mp3" };
-        string[] result;
+        int totalSongsCount;
+        double progressValue;
+        string[] charsToRemove = new string[] { "?", "@", ";", "!", "#", ":", "\"" };
 
         public Form1()
         {
             InitializeComponent();
+            label2.Visible = false;
+            progressBar1.Visible = false;
         }
 
         private void Browse1Button_Click(object sender, EventArgs e)
@@ -80,7 +84,6 @@ namespace WindowsFormsAppAudio
                         {
                             if (!element.Contains('\\') && !element.Contains('/'))
                             {
-                                var charsToRemove = new string[] { "?", "@", ";", "!", "#", ":", "\""};
 
 
 
@@ -103,10 +106,30 @@ namespace WindowsFormsAppAudio
                 }
             }
 
-
+            //The timestamp evaluation is complete,
             //Put the information into the list boxes.
             listBox1.DataSource = Timestamps;
             listBox2.DataSource = Names;
+            totalSongsCount = Timestamps.Count;
+            progressBar1.Maximum = totalSongsCount;
+
+
+            if(Timestamps.Count != Names.Count)
+            {
+                if (DialogResult.OK == MessageBox.Show(("Timestamps: " + Timestamps.Count.ToString() +"\nNames: " + Names.Count.ToString()), "Mismatch Detected"))
+                {
+                   // this.Dispose(false);
+                    this.Close();
+
+                    Form1 NewForm = new Form1();
+                    NewForm.Show();
+                }
+                else
+                {
+                    this.Close();
+                }
+
+            }
 
         }
 
@@ -119,45 +142,95 @@ namespace WindowsFormsAppAudio
             }
             else
             {
-                //What if the file has a period within it?
-                //fileFolder = musicFileLocation.Split('.')[0];  //Split by the .extension and give me the first part
-                fileFolder = musicFileLocation.Split(stringSeparators, StringSplitOptions.None)[0];
-                System.IO.Directory.CreateDirectory(fileFolder);
+                BackgroundWorker cutterProcess = new BackgroundWorker();
+                cutterProcess.WorkerReportsProgress = true;
+                progressBar1.Visible = true;
+                label2.Visible = true;
 
-                var Timestamp = Timestamps.GetEnumerator();
-                var NextTimestamp = Timestamps.GetEnumerator();
-                var Name = Names.GetEnumerator();
-                Name.MoveNext();
-                NextTimestamp.MoveNext();
-                NextTimestamp.MoveNext();
-
-
-
-                int count = 1;
-                while (Timestamp.MoveNext())
-                {
-                    //If this is the last timestamp/song, then the nextTimestamp.Current will be null.
-                    if (NextTimestamp.Current == null)
+                cutterProcess.DoWork += new DoWorkEventHandler(
+                    delegate (object o, DoWorkEventArgs args)
                     {
-                        TrimMp3(musicFileLocation, System.IO.Path.Combine(fileFolder, Name.Current + ".mp3"), computeSecs(Timestamp.Current), new Mp3FileReader(musicFileLocation).TotalTime);
-                    }
-                    else
+                        BackgroundWorker b = o as BackgroundWorker;
+
+
+                        //What if the file has a period within it?
+                        //fileFolder = musicFileLocation.Split('.')[0];  //Split by the .extension and give me the first part
+                        fileFolder = musicFileLocation.Split(stringSeparators, StringSplitOptions.None)[0];
+                        System.IO.Directory.CreateDirectory(fileFolder);
+
+                        var Timestamp = Timestamps.GetEnumerator();
+                        var NextTimestamp = Timestamps.GetEnumerator();
+                        var Name = Names.GetEnumerator();
+                        Name.MoveNext();
+                        NextTimestamp.MoveNext();
+                        NextTimestamp.MoveNext();
+
+
+
+                        int count = 1;
+
+
+                        while (Timestamp.MoveNext())
+                        {
+                            //If this is the last timestamp/song, then the nextTimestamp.Current will be null.
+                            if (NextTimestamp.Current == null)
+                            {
+                                TrimMp3(musicFileLocation, System.IO.Path.Combine(fileFolder, Name.Current + ".mp3"), computeSecs(Timestamp.Current), new Mp3FileReader(musicFileLocation).TotalTime);
+                            }
+                            else
+                            {
+                                TrimMp3(musicFileLocation, System.IO.Path.Combine(fileFolder, Name.Current + ".mp3"), computeSecs(Timestamp.Current), computeSecs(NextTimestamp.Current));
+                            }
+
+
+                            b.ReportProgress(count);
+                            //progressBar1.Increment(1);
+                            //label2.Text = (progressBar1.Value).ToString() + "%";//(count / totalSongsCount).ToString("#.##") + "%";
+
+
+                            //Adjusting the file tag information
+                            var file = TagLib.File.Create(System.IO.Path.Combine(fileFolder, Name.Current + ".mp3"));
+                            file.Tag.Track = (uint)count;
+                            file.Tag.TrackCount = (uint)Timestamps.Count();
+                            file.Save();
+
+                            Name.MoveNext();
+                            NextTimestamp.MoveNext();
+                            count++;
+                        } //end of while
+
+                    });
+
+                //What to do on main thread if cutterProcess reports change.
+                cutterProcess.ProgressChanged += new ProgressChangedEventHandler(
+                    delegate (object o, ProgressChangedEventArgs args)
                     {
-                        TrimMp3(musicFileLocation, System.IO.Path.Combine(fileFolder, Name.Current + ".mp3"), computeSecs(Timestamp.Current), computeSecs(NextTimestamp.Current));
-                    }
+                        progressBar1.Increment(1);
+                        progressValue = (100 * (double)progressBar1.Value / totalSongsCount);
+                        label2.Text = ((int)Math.Ceiling(progressValue)).ToString() + "%";
+                    });
 
-                    //Adjusting the file tag information
-                    var file = TagLib.File.Create(System.IO.Path.Combine(fileFolder, Name.Current +".mp3"));
-                    file.Tag.Track = (uint)count;
-                    file.Tag.TrackCount = (uint)Timestamps.Count();
-                    file.Save();
+                //What to do when worker completes its task
+                cutterProcess.RunWorkerCompleted += new RunWorkerCompletedEventHandler(
+                    delegate (object o, RunWorkerCompletedEventArgs args)
+                    {
+                        if (DialogResult.OK == MessageBox.Show("Cutting Complete!"))
+                        {
+                            this.Dispose(false);
+                            Form1 NewForm = new Form1();
+                            NewForm.Show();
+                        }
+                        else
+                        {
+                            this.Close();
+                        }
+                    });
 
-                    Name.MoveNext();
-                    NextTimestamp.MoveNext();
-                    count++;
-                }
+                cutterProcess.RunWorkerAsync();
+                
+            }  //end of else
 
-            }
+            
         }
 
 
@@ -253,6 +326,11 @@ namespace WindowsFormsAppAudio
                         else break;
                     }
             }
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
         }
     }
 
